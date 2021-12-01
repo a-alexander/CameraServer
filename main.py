@@ -7,17 +7,23 @@ import imutils
 import time
 import cv2
 
-vs = VideoStream(src=0).start()
+vs = VideoStream(src=0, resolution=(720, 480)).start()
 time.sleep(2.0)
+
+outputFrame = None
+lock = threading.Lock()
+# initialize a flask object
+app = Flask(__name__)
 
 
 def detect_motion():
     print('Starting camera feed thread...')
+    global outputFrame
     while True:
         # read the next frame from the video stream, resize it,
         # convert the frame to grayscale, and blur it
         frame = vs.read()
-        frame = imutils.resize(frame, width=400)
+        frame = imutils.resize(frame, width=800)
         with lock:
             outputFrame = frame.copy()
 
@@ -42,12 +48,6 @@ def generate():
         # yield the output frame in the byte format
         yield (b'--frame\r\n' b'Content-Type: image/jpeg\r\n\r\n' +
                bytearray(encodedImage) + b'\r\n')
-
-
-outputFrame = None
-lock = threading.Lock()
-# initialize a flask object
-app = Flask(__name__)
 
 
 @app.route("/")
